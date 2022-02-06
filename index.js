@@ -3,10 +3,17 @@ const app = express()
 const config = require('config')
 const helmet = require('helmet')
 
+const moongose = require('mongoose')
+
 // Debugging and Logging
 const startupDebugger = require('debug')('app:startup')
 const dbDebugger = require('debug')('app:db')
 const morgan = require('morgan')
+
+// DB 
+moongose.connect('mongodb://localhost/school_db')
+        .then(() => console.log('(Mongoose) connected to mongodb...'))
+        .catch(err => console.log('(Mongoose) could not connect to mongodb...', err))
 
 // Routes
 const courses = require('./routes/courses')
