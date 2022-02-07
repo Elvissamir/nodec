@@ -38,16 +38,38 @@ async function createCourse() {
 }
 
 async function getCourse() {
+    const pageNumber = 2
+    const pageSize = 10
+
     const courses = await Course
         .find({ author: 'Mosh', isPusblished: true })
-        .limit(10)
+        .skip((pageNumber - 1) * pageSize)
+        .limit(pageSize)
         .sort({ name: 1 })
         .select({ name: 1, tags: 1 })
 
     console.log(courses)
 }
 
-getCourse()
+async function updateCourse(id) {
+    const result = await Course.findByIdAndUpdate(id, {
+        $set: {
+            author: "Jason",
+            isPusblished: false
+        }
+    }, {new: true})
+
+    console.log(result)
+}
+
+
+
+async function removeCourse(id) {
+    const result = await Course.deleteMany({ _id: id })
+    console.log(result)
+}
+
+removeCourse("62010bef6de424818f1b0086")
 
 // Routes
 const courses = require('./routes/courses')
