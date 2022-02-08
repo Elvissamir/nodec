@@ -16,11 +16,39 @@ moongose.connect('mongodb://localhost/playground')
         .catch(err => console.log('(Mongoose) could not connect to mongodb...', err))
 
 const courseSchema = new moongose.Schema({
-    name: String,
-    author: String,
-    tags: [ String ],
+    name: { 
+        type: String, 
+        required: true,
+        minlength: 5,
+        maxlength: 255
+    },
+    category: {
+        type: String,
+        required: true,
+        enum: ['web', 'mobile', 'network']
+    },
+    author: { type: String, required: true },
+    tags: {
+        type: Array,
+        validate: {
+            isAsync: true,
+            validator: function(v, callback) { 
+                setTimeout(() => { 
+                    const result = v && v.length > 0
+                    callback(result)
+                }, 1000)
+            },
+        message: 'A course should have at least one tag'
+        }
+    },
     date: { type: Date, default: Date.now },
-    isPusblished: Boolean
+    isPusblished: Boolean,
+    price: {
+        type: Number,
+        min: 10,
+        max: 200,
+        required: function() { return this.isPusblished }
+    }
 })
 
 const Course = moongose.model('Course', courseSchema)
@@ -29,12 +57,20 @@ async function createCourse() {
     const course = new Course({
         name: 'Angular',
         author: 'Mosh',
+        category: 'web',
         tags: ['angular', 'frontend'],
-        isPusblished: true
+        isPusblished: true,
+        price: 15
     })
-    
-    const result = await course.save()
-    console.log(result)
+
+    try {
+        const result = await course.save()
+        console.log(result)
+    }
+    catch (ex) {
+        for (field in ex.errors)
+            dbDebugger(ex.errors[field].message)
+    }
 }
 
 async function getCourse() {
@@ -65,11 +101,11 @@ async function updateCourse(id) {
 
 
 async function removeCourse(id) {
-    const result = await Course.deleteMany({ _id: id })
+    const result = await Course.deleteOne({ _id: id })
     console.log(result)
 }
 
-removeCourse("62010bef6de424818f1b0086")
+// removeCourse()
 
 // Routes
 const courses = require('./routes/courses')
